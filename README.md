@@ -1,2 +1,3 @@
 # python_notes
 python相关的学习笔记
+basic基础的python语法目录
