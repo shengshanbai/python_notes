@@ -10,11 +10,6 @@ import tensorflow.examples.tutorials.mnist.input_data as input_data
 import numpy as np
 import cv2
 
-TRAIN_IMAGES_PATH='E:/dataset/mnist/train-images-idx3-ubyte.gz'
-TRAIN_LABELS_PATH='E:/dataset/mnist/train-labels-idx1-ubyte.gz'
-TEST_IMAGES_PATH='E:/dataset/mnist/t10k-images-idx3-ubyte.gz'
-TEST_LABELS_PATH='E:/dataset/mnist/t10k-labels-idx1-ubyte.gz'
-
 IMAGE_SIZE=28
 
 class MnistReader:
@@ -48,7 +43,7 @@ class MnistReader:
         
     def _read_image(self,file):
         data_read=file.read(self.rows*self.columns)
-        image=np.frombuffer(data_read,np.uint8).reshape(self.rows,self.columns)
+        image=np.frombuffer(data_read,np.uint8).reshape((self.rows,self.columns,1))
         return image
         
     def _read_lable_(self,file):
@@ -66,29 +61,14 @@ class MnistReader:
         if not self.image_file.closed():
             self.image_file.close()
 
-def _batch_gen(batch_size,image_path,label_path):
+def batch_gen(batch_size,image_path,label_path):
     mnistReader=MnistReader(image_path,label_path)
     gen=mnistReader.gen_data()
     while True:
-        images=list()
-        labels=list()
+        images=np.zeros((batch_size,mnistReader.rows,mnistReader.columns,1))
+        labels=np.zeros((batch_size,10))
         for index in range(batch_size):
-            data=next(gen)
-            images.append(data[0])
-            labels.append(data[1])
+            images[index,:],labels[index,:]=next(gen)
         yield images,labels
     mnistReader.close()
-    
-def train_data_batch_gen(batch_size):
-    return _batch_gen(batch_size,TRAIN_IMAGES_PATH,TRAIN_LABELS_PATH)
-
-def test_data_batch_gen(batch_size):
-    return _batch_gen(batch_size,TEST_IMAGES_PATH,TEST_LABELS_PATH)
-
-if __name__=="__main__":
-    gen=train_data_batch_gen(6)
-    for images,labels in gen:
-        for image,label in zip(images,labels):
-            print("image:",image)
-            print("number:",np.where(label==1)[0][0])
         
