@@ -20,7 +20,23 @@ class Gamma:
         out=numpy.reshape(out,shape)
         return out
 
-if __name__=='__main__':
+class PieLineTrans:
+    """
+    分段线性变换，有2个点(r1,s1),(r2,s2)，分别从(0-r1),(r1-r2),(r2-max)进行三段线性变换，
+    可以看做是对gamma变换的一种近似，更好的根据需要调整值
+    """
+    def __init__(self,r1,s1,r2,s2):
+        self.table=[round(x*s1/r1) for x in range(r1)]
+        self.table.extend([round((x-r1)*(s2-s1)/(r2-r1)+s1) for x in range(r1,r2)])
+        self.table.extend([round((x-r2)*(255-s2)/(255-r2)+s2) for x in range(r2,256)])
+    
+    def apply(self,image):
+        shape=image.shape
+        out=numpy.array([self.table[x] for x in image.flat],dtype=numpy.uint8)
+        out=numpy.reshape(out,shape)
+        return out
+
+def testGamma():
     for (url,gama) in [('imagebase/bright.png',2.5),('imagebase/dark.png',0.5)]:
         image=cv2.imread(url)
         g=Gamma(gama)
@@ -29,3 +45,17 @@ if __name__=='__main__':
         cv2.imshow("gamma",out)
         cv2.waitKey()
         cv2.destroyAllWindows()
+
+def testLineTrans():
+    for url in ['imagebase/bright.png','imagebase/dark.png']:
+        lineTrans=PieLineTrans(70,20,186,230)
+        image=cv2.imread(url)
+        out=lineTrans.apply(image)
+        cv2.imshow("origin",image)
+        cv2.imshow("gamma",out)
+        cv2.waitKey()
+        cv2.destroyAllWindows()
+
+if __name__=='__main__':
+    #testGamma()
+    testLineTrans()
